@@ -1,3 +1,4 @@
+;; Copied directly from https://github.com/omcljs/om/wiki/Queries-With-Unions
 (ns om-tutorial.core
   (:require [goog.dom :as gdom]
             [om.next :as om :refer-macros [defui]]
@@ -132,11 +133,14 @@
   {:action
    (fn []
      (swap! state update-in (conj ref :favorites) inc))})
+
+;; Added this mutation ==============================================
 (defmethod mutate 'dashboard/update
   [{:keys [state]} _ _]
   {:action
    (fn []
      (swap! state assoc-in [:dashboard/post 0 :content] "ohai"))})
+;; ==================================================================
 
 (def reconciler
   (om/reconciler
@@ -144,3 +148,20 @@
      :parser (om/parser {:read read :mutate mutate})}))
 
 (om/add-root! reconciler Dashboard (gdom/getElement "app"))
+
+;; Bug repro follows ================================================
+;; works
+(om/transact! reconciler '[(dashboard/update)])
+
+;; works
+(let [dashboard (om/class->any reconciler Dashboard)]
+  (om/transact! dashboard '[(dashboard/update)]))
+
+;; works
+(let [item (om/class->any reconciler DashboardItem)]
+  (om/transact! item '[(dashboard/update)]))
+
+;; throws "No queries exist for component path (om-tutorial.core/Dashboard om-tutorial.core/DashboardItem om-tutorial.core/Post)"
+;; also able to reproduce from REPL and when triggered by a UI event (e.g. onClick) from a leaf component
+(let [post (om/class->any reconciler Post)]
+  (om/transact! post '[(dashboard/update)]))
