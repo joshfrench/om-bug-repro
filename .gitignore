@@ -1,0 +1,5 @@
+.lein-repl-history
+figwheel_server.log
+pom.xml
+resources/**
+target/**
