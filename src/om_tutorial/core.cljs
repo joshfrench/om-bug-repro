@@ -132,6 +132,11 @@
   {:action
    (fn []
      (swap! state update-in (conj ref :favorites) inc))})
+(defmethod mutate 'dashboard/update
+  [{:keys [state]} _ _]
+  {:action
+   (fn []
+     (swap! state assoc-in [:dashboard/post 0 :content] "ohai"))})
 
 (def reconciler
   (om/reconciler
